@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from google.cloud import storage, bigquery
 import warnings
-from bluelabs import BluelabsDataLoader
+from bluelabs import BluelabsDataLoader, BluelabsDataAggregator
 from survey_monkey import SurveyMonkeyDataLoader
 warnings.filterwarnings("ignore")
 
