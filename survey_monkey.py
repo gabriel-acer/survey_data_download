@@ -44,6 +44,7 @@ class SurveyMonkeyDataLoader():
         storage_client = storage.Client(project=self.PROJECT_ID)
         bucket = storage_client.get_bucket("gabriel_bucket_test")
         blob = bucket.blob("agg_surveymonkey_data.csv")
-        blob.upload_from_string(survey_monkey.to_csv(index=False)) 
+        blob.upload_from_string(survey_monkey.to_csv(index=False,
+                                                    encoding="utf-8")) 
         
     
