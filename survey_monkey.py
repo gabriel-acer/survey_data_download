@@ -66,22 +66,22 @@ class SurveyMonkeyDataLoader():
         }
 
         education_dict_sm = {
-        1:"Did not complete high school",
-        2:"Graduated high school or equivalent",
+        1:"Did Not Complete High School",
+        2:"Graduated High School",
         3:"Attended college no degree",
         4:"Associates degree",
-        5:"Bachelor's",
-        6:"Master, PhD, other professional degrees",
+        5:"Bachelors degree",
+        6:"Master, PhD",
         7:"No answer"
         }
 
         race_dict_sm = {
         1:"White",
         2:"Black or African American",
-        3:"Hispanic, Latino, Latin American",
-        4:"Asian",
-        5:"Native American",
-        6:"Middle Eastern or North African",
+        3:"Hispanic, Latino or Latin-American",
+        4:"Asian, Asian-American or Pacific Islander",
+        5:"Other",
+        6:"Other",
         7:"Other",
         8:"No answer"
         }
@@ -113,7 +113,7 @@ class SurveyMonkeyDataLoader():
                     'Bernie Sanders', 'Tom Steyer','Elizabeth Warren', 'Andrew Yang', 'None of the above',
         'No answer']
 
-        numbers = [i for i in range(1, len(candidates)+1)]
+        numbers = [i for i in range(1, len(candidates) + 1)]
 
         candidates_df = pd.DataFrame({'name_first_choice_candidates':candidates, 
                              'candidate_first_choice':numbers})
@@ -131,6 +131,8 @@ class SurveyMonkeyDataLoader():
                              'candidate_second_choice':numbers})
 
         df = df.merge(candidates_df, on='candidate_second_choice',how='left')
+        
+        df = df[df.age >= 18]
 
         df.loc[(df['age'] >= 18) & (df['age'] <= 38), 'age_bin'] = 'Millenials'
         df.loc[(df['age'] >= 39) & (df['age'] <= 54), 'age_bin'] = 'Gen_X'
@@ -240,6 +242,9 @@ class SurveyMonkeyDataLoader():
         """
         Function to save the aggregated data into gcs
         """
+        self.survey_monkey = self.survey_monkey.rename(
+            columns={'response_id':'respondents_id', 
+                     'qturnout':'turnout'})
         storage_client = storage.Client(project=self.PROJECT_ID)
         bucket = storage_client.get_bucket("gabriel_bucket_test")
         blob = bucket.blob("agg_surveymonkey_data.csv")
@@ -250,3 +255,12 @@ class SurveyMonkeyDataLoader():
         print("Survey monkey data has been saved.")
         
         return self
+    
+    def run(self):
+        """
+        Driver function to run everything
+        """
+        self.download_from_big_query()
+        self.clean()
+        self.decode()
+        self.save()
