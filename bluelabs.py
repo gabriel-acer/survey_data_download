@@ -142,9 +142,13 @@ class BluelabsDataAggregator():
         self.BUCKET_NAME = 'gabriel_bucket_test'
         storage_client = storage.Client(project=self.PROJECT_ID)
         bucket = storage_client.get_bucket(self.BUCKET_NAME)
+        print('-' * 20)
+        print("Reading raw bluelabs data..")
         blob = bucket.get_blob("agg_bluelabs_data.csv")
         data = blob.download_to_filename("survey_raw_data/agg_bluelabs_data.csv")
         self.bluelabs_data = pd.read_csv("survey_raw_data/agg_bluelabs_data.csv")
+        print('-' * 20)
+        print("Reading complete..")
     
     def clean(self):
         """
@@ -394,14 +398,28 @@ class BluelabsDataAggregator():
             'qturnout',
             'race',
             'education',
-            'past_vote'
+            'past_vote',
+            'age',
+            'qsupport',
+            'age_bin',
+            'source_id',
+            'evangelical'
             ]
         rate_cols = list(col for col in self.bluelabs_data.columns
-                        if col.startswith('qrate'))
+                        if col.startswith('qrate') and not col.endswith('text'))
+        # divide by 2
+        for rc in rate_cols:
+            self.bluelabs_data[rc] = self.bluelabs_data[rc] / 2
+            
+        self.bluelabs_data['evangelical'] = np.nan
         key_cols.extend(rate_cols)
         storage_client = storage.Client(project=self.PROJECT_ID)
         bucket = storage_client.get_bucket(self.BUCKET_NAME)
         blob = bucket.blob("bluelabs_superset.csv")
         blob.upload_from_string(self.bluelabs_data[key_cols].to_csv(index=False))
         
+        print('-' * 20)
+        print("Bluelabs data has been saved.")
+        
         return self
+
