@@ -262,7 +262,7 @@ class BluelabsDataAggregator():
         """
         # race 
         self.bluelabs_data.loc[self.bluelabs_data.qrace==1,'race']='White'
-        self.bluelabs_data.loc[self.bluelabs_data.qrace==2,'race']='Black or AfricanAmerican'
+        self.bluelabs_data.loc[self.bluelabs_data.qrace==2,'race']='Black or African American'
         self.bluelabs_data.loc[self.bluelabs_data.qrace==3,'race']='Hispanic, Latino or Latin-American'
         self.bluelabs_data.loc[self.bluelabs_data.qrace==4,'race']='Asian, Asian-American or Pacific Islander'
         self.bluelabs_data.loc[self.bluelabs_data.qrace==5,'race']='Other'
@@ -273,10 +273,9 @@ class BluelabsDataAggregator():
         # education 
         self.bluelabs_data.loc[self.bluelabs_data.qeducation==1, 'education']= 'Did Not Complete High School'
         self.bluelabs_data.loc[self.bluelabs_data.qeducation==2, 'education']= 'Graduated High School'
-        self.bluelabs_data.loc[self.bluelabs_data.qeducation==3, 
-                  'education']= 'Some College, No Degree'
+        self.bluelabs_data.loc[self.bluelabs_data.qeducation==3, 'education']= 'Attended college no degree'
         self.bluelabs_data.loc[self.bluelabs_data.qeducation==4, 'education']= 'Associates degree'
-        self.bluelabs_data.loc[self.bluelabs_data.qeducation==5, 'education']= 'Bachelor’s degree'
+        self.bluelabs_data.loc[self.bluelabs_data.qeducation==5, 'education']= 'Bachelors degree'
         self.bluelabs_data.loc[self.bluelabs_data.qeducation==6, 'education']= 'Masters, PhD'
         self.bluelabs_data.loc[self.bluelabs_data.qeducation==7, 'education']= 'No answer'
         self.bluelabs_data.loc[self.bluelabs_data.qeducation==8, 'education']= 'No answer'
@@ -377,6 +376,9 @@ class BluelabsDataAggregator():
         
         self.bluelabs_data['gender'] = self.bluelabs_data.vb_voterbase_gender
         
+        self.bluelabs_data['disp'] = self.bluelabs_data['disp'].apply(
+                lambda x: 'completed' if x == 1.0 else 'partial')
+        
         return self
         
     
@@ -384,42 +386,65 @@ class BluelabsDataAggregator():
         """
         Function to save the results
         """
-        key_cols = [
-            'date',
-            'voterbase_id',
-            'state',
-            'zipcode',
-            'vb_voterbase_gender',
-            'employement',
-            'religion',
-            'income',
-            'racehisp',
-            'turnout_response',
-            'qturnout',
-            'race',
-            'education',
-            'past_vote',
-            'age',
-            'qsupport',
-            'age_bin',
-            'source_id',
-            'evangelical'
-            ]
+
         rate_cols = list(col for col in self.bluelabs_data.columns
                         if col.startswith('qrate') and not col.endswith('text'))
-        # divide by 2
-        for rc in rate_cols:
-            self.bluelabs_data[rc] = self.bluelabs_data[rc] / 2
+        
+        # change the rate cols 
+        self.bluelabs_data = self.bluelabs_data.rename(columns={'voterbase_id':'respondents_id', 
+                            'vb_voterbase_gender':'gender',
+                            'qturnout':'turnout',
+                            'qrate_ak':'rate_klobuchar',
+                            'qrate_ay':'rate_yang', 
+                            'qrate_bs':'rate_sanders', 
+                            'qrate_cb':'rate_booker', 
+                            'qrate_dp':'rate_patrick',
+                            'qrate_ew':'rate_warren', 
+                            'qrate_jb':'rate_biden',
+                            'qrate_jc':'rate_castro',
+                            'qrate_kh':'rate_harris', 
+                            'qrate_mb':'rate_bloomberg',
+                            'qrate_mb2':'rate_bennet', 
+                            'qrate_pb':'rate_buttigieg', 
+                            'qrate_sb':'rate_bullock',
+                            'qrate_tg': 'rate_gabbard',
+                            'qrate_ts':'rate_steyer', 
+                            'qratepost':'bloomberg_support', 
+                            'qsupport':'name_first_choice_candidates', 
+                             'racehisp':'hispanic',
+                            'disp':'response_status'})
+        
+        cols_to_change = ['rate_klobuchar',
+       'rate_yang', 'rate_sanders', 'rate_booker', 'rate_patrick',
+       'rate_warren', 'rate_biden', 'rate_castro', 'rate_harris',
+       'rate_bloomberg', 'rate_bennet', 'rate_buttigieg', 'rate_bullock',
+       'rate_gabbard', 'rate_steyer', 'bloomberg_support']
+
+        for x in cols_to_change: 
+            self.bluelabs_data.loc[(self.bluelabs_data[x]==1)|(self.bluelabs_data[x]==2),x]=1
+            self.bluelabs_data.loc[(self.bluelabs_data[x]==3)|(self.bluelabs_data[x]==4),x]=2
+            self.bluelabs_data.loc[(self.bluelabs_data[x]==5)|(self.bluelabs_data[x]==6),x]=3
+            self.bluelabs_data.loc[(self.bluelabs_data[x]==7)|(self.bluelabs_data[x]==8),x]=4
+            self.bluelabs_data.loc[(self.bluelabs_data[x]==9)|(self.bluelabs_data[x]==10),x]=5
+            self.bluelabs_data.loc[self.bluelabs_data[x]==99,x]=6
+            self.bluelabs_data.loc[self.bluelabs_data[x]==98,x]=6
             
         self.bluelabs_data['evangelical'] = np.nan
-        key_cols.extend(rate_cols)
         storage_client = storage.Client(project=self.PROJECT_ID)
         bucket = storage_client.get_bucket(self.BUCKET_NAME)
         blob = bucket.blob("bluelabs_superset.csv")
-        blob.upload_from_string(self.bluelabs_data[key_cols].to_csv(index=False))
+        blob.upload_from_string(self.bluelabs_data.to_csv(index=False))
         
         print('-' * 20)
         print("Bluelabs data has been saved.")
         
         return self
-
+    
+    def run(self):
+        """
+        Driver function to run everything 
+        """
+        self.clean()
+        self.voter_age_zip()
+        self.decode_cols()
+        self.save()
