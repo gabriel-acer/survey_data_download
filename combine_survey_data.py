@@ -14,7 +14,7 @@ class SurveyDataCombiner():
     """
     def __init__(self):
 
-        self.target_cols = ['date', 'respondents_id', 'state', 'zipcode', 'gender',
+        target_cols = ['date', 'respondents_id', 'state', 'zipcode', 'gender',
        'religion', 'hispanic', 'turnout', 'race',
        'education', 'age', 'name_first_choice_candidates',
        'rate_klobuchar', 'rate_yang', 'rate_sanders', 'rate_booker',
@@ -24,8 +24,7 @@ class SurveyDataCombiner():
 
         self.bl_data = pd.read_csv("gcs://gabriel_bucket_test/bluelabs_superset.csv")
         self.sm_data = pd.read_csv("gcs://gabriel_bucket_test/agg_surveymonkey_data.csv")
-        bl_data['source_id'], sm_data['source_id'] = 'bluelabs', 'survey_monkey'
-        self.combined_data = bl_df[target_cols].append(sm_df[target_cols])
+        self.combined_data = self.bl_data[target_cols].append(self.sm_data[target_cols])
         
         PROJECT_ID = 'hawkfish-prod-0c4ce6d0'
         storage_client = storage.Client(project=PROJECT_ID)
@@ -33,6 +32,6 @@ class SurveyDataCombiner():
         print('-' * 20)
         print('Saving combined dataset..')
         blob = bucket.blob("bluelabs_surveymonkey_agg.csv")
-        blob.upload_from_string(final_df.to_csv(index=False))
+        blob.upload_from_string(self.combined_data.to_csv(index=False))
         print('-' * 20)
         print('Saving complete.')
