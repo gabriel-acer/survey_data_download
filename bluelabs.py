@@ -57,7 +57,7 @@ class BluelabsDataLoader():
         filtered_dfs = []
         for file_name in self.file_names:
             raw_data = pd.read_csv(raw_path + file_name.split('/')[1])
-            if raw_data.shape[1] == 45 or raw_data.shape[1] == 47:
+            if raw_data.shape[1] == 45 or raw_data.shape[1] == 47 or raw_data.shape[1] == 46:
                 raw_data.columns = [col.lower() for col in raw_data.columns]
                 raw_data = raw_data.rename(
                     columns={'qrate_mbpost':'qratepost',
@@ -66,7 +66,7 @@ class BluelabsDataLoader():
                             })
                 filtered_dfs.append(raw_data)
             else:
-                pass
+                print(file_name)
 
         self.agg_df = filtered_dfs[0].append(filtered_dfs[1])
         for filtered_df in filtered_dfs[2:]:
@@ -144,11 +144,10 @@ class BluelabsDataAggregator():
         bucket = storage_client.get_bucket(self.BUCKET_NAME)
         print('-' * 20)
         print("Reading raw bluelabs data..")
-        blob = bucket.get_blob("agg_bluelabs_data.csv")
-        data = blob.download_to_filename("survey_raw_data/agg_bluelabs_data.csv")
-        self.bluelabs_data = pd.read_csv("survey_raw_data/agg_bluelabs_data.csv")
+        self.bluelabs_data = pd.read_csv("gcs://gabriel_bucket_test/agg_bluelabs_data.csv")
         print('-' * 20)
         print("Reading complete..")
+        print(self.bluelabs_data.shape)
     
     def clean(self):
         """
