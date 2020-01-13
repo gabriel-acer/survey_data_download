@@ -11,8 +11,7 @@ warnings.filterwarnings("ignore")
 
 if __name__ == '__main__':
     #SurveyMonkeyDataLoader().download_from_big_query()
-    #BluelabsDataLoader().download_from_big_query()
-    bl = BluelabsDataAggregator().run()
+    #BluelabsDataLoader().download_from_gcs()
+    #bl = BluelabsDataAggregator().run()
     sm = SurveyMonkeyDataLoader().run()
-    final = SurveyDataCombiner()
-    
+    final = SurveyDataCombiner().update_misc_graphs()
