@@ -31,7 +31,7 @@ class SurveyMonkeyDataLoader():
         query_sm = """
         SELECT 
          *
-        FROM survey_monkey.survey_monkey;
+        FROM survey_monkey.survey_monkey_curr;
         """
         query_job = client.query(
             query_sm,
@@ -49,7 +49,7 @@ class SurveyMonkeyDataLoader():
         """
         Function to clean the data
         """
-        split_df = self.survey_monkey.end_time.str.split(' ', expand=True)
+        split_df = self.survey_monkey.end_time.astype(str).str.split(' ', expand=True)
         self.survey_monkey['date']= split_df[0]
         # candidates decode 
         candidates = ['Michael Bennet','Joe Biden','Michael Bloomberg',
@@ -226,7 +226,7 @@ class SurveyMonkeyDataLoader():
         try:
             self.survey_monkey['religion'] = self.survey_monkey['religion'].apply(lambda x: sm_religion[x] )
             self.survey_monkey['income'] = self.survey_monkey['income'].apply(lambda x: sm_income[x] )
-            self.survey_monkey['employment_status'] = self.survey_monkey['employment_status'].apply(lambda x: sm_income[x] )
+            self.survey_monkey['employment_status'] = self.survey_monkey['employment_status'].apply(lambda x: sm_emp[x] )
             self.survey_monkey['evangelical'] = self.survey_monkey['evangelical'].apply(lambda x: sm_en[x] if not np.isnan(x)
                                                      else np.nan)
             self.survey_monkey['hispanic'] = self.survey_monkey['hispanic'].apply(lambda x: sm_hisp[x] if not np.isnan(x)
